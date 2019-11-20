@@ -17,7 +17,7 @@ W(x, y), b(x, 1)
     this->name = name;
     W.allocate();
     b.allocate();
-    this->initWeights(true, 0.0f, 1.0f);
+    this->initWeights(false, 0.0f, 1.0f);
     this->initBias();
 
     W.cpyDevToHost();
@@ -39,8 +39,9 @@ Matrix &LinearLayer::forward(cublasHandle_t handle, Matrix &A) {
     Y.allocate_size(W.getX(), A.getY());
 
     // Y(m,n) = W(m,k) * A(k,n)
-    gpu_blas_mmul(handle, this->W.getDevData().get(), this->A.getDevData().get(),
-            this->Y.getDevData().get(), this->W.getX(), this->W.getY(), this->A.getY());
+    //m, n, k
+    gpu_blas_mmul(handle, this->W.getDevData().get(), CUBLAS_OP_N, this->A.getDevData().get(),
+                  CUBLAS_OP_N, this->Y.getDevData().get(), this->W.getX(), this->A.getY(), this->W.getY());
 
     gpu_add_bias(this->Y.getDevData().get(), this->b.getDevData().get(),
             this->Y.getDevData().get(), this->Y.getX(), this->Y.getY());
@@ -51,12 +52,32 @@ Matrix &LinearLayer::forward(cublasHandle_t handle, Matrix &A) {
 Matrix &LinearLayer::backward(cublasHandle_t handle, Matrix &top_diff) {
     dA.allocate_size(A.getX(), A.getY());
 
-    //k, m, n
-    gpu_blas_mtmul(handle, this->W.getDevData().get(), top_diff.getDevData().get(),
-                  this->dA.getDevData().get(), this->W.getX(), this->W.getY(), top_diff.getY());
+    //Calculate dA
+    //m, n, k
+    gpu_blas_mmul(handle, this->W.getDevData().get(), CUBLAS_OP_T, top_diff.getDevData().get(), CUBLAS_OP_N,
+                  this->dA.getDevData().get(), this->W.getY(), top_diff.getY(), this->W.getX());
 
-    dA.cpyDevToHost();
-    cout << dA << endl;
+    // TODO: rimuovi stampa
+    /*dA.cpyDevToHost();
+    cout << "dA" << endl;
+    cout << dA << endl;*/
+
+    gpu_blas_mmul(handle, top_diff.getDevData().get(), CUBLAS_OP_N, this->A.getDevData().get(), CUBLAS_OP_T,
+                   W.getDevData().get(), top_diff.getX(), this->A.getX(), top_diff.getY(), 2, 1);
+
+    // TODO: rimuovi stampa
+    /*W.cpyDevToHost();
+    cout << "dW" << endl;
+    cout << W << endl;*/
+
+    gpu_blas_sum_column(handle, top_diff.getDevData().get(), this->b.getDevData().get(), top_diff.getX(), top_diff.getY(),
+    2, 1.0f);
+
+    // TODO: rimuovi stampa
+    /*b.cpyDevToHost();
+    cout << "db" << endl;
+    cout << b << endl;*/
+
     return dA;
 }
 

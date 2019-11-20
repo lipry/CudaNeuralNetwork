@@ -20,9 +20,16 @@ __global__ void add_vector_row_wise(float *R, float *A, float *V, int x, int y);
 
 void gpu_add_bias(float *A, float *b, float *Y, int x, int y);
 
-void gpu_blas_mmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int k, int n);
+void gpu_blas_mmul(cublasHandle_t &handle, const float *W, cublasOperation_t W_op,
+                   const float *A, cublasOperation_t A_op, float *Y,
+                   int m, int k, int n, float batch_size = 1.0, float bet = 0.0f);
 
-void gpu_blas_mtmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int k, int m, int n);
+void gpu_blas_mmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int n, int k);
 
+void gpu_blas_mtmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int n, int k);
+
+void gpu_blas_mmtul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int n, int k, float batch_size, float bet);
+
+void gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, int m, int n, float batch_size, float bet);
 
 #endif //NEURALNETWORKCUDA_CUDAMATH_H

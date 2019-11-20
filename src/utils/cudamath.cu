@@ -5,14 +5,14 @@
 #include "cudamath.h"
 #include <stdio.h>
 #include "cublas_v2.h"
+#include "Matrix.h"
 #include <curand.h>
 #include <curand_kernel.h>
+#include <stdexcept>
 
-// ==============
-// =   KERNEL   =
-// ==============
-
-using namespace std;
+// ===============
+// =   KERNELS   =
+// ===============
 
 __global__ void add_vect(float *R, float *A, float *B, int x, int y){
     int idx = blockDim.x*blockIdx.x + threadIdx.x;
@@ -40,9 +40,9 @@ __global__ void add_vector_row_wise(float *R, float *A, float *V, int x, int y){
     }
 }
 
-// ================
-// =   FUNCTION   =
-// ================
+// ========================
+// =   KERNEL FUNCTIONS   =
+// ========================
 
 void gpu_add_bias(float *A, float *b, float *Y, int x, int y){
     dim3 TxB(BLOCK_SIZE, BLOCK_SIZE);
@@ -50,25 +50,56 @@ void gpu_add_bias(float *A, float *b, float *Y, int x, int y){
     add_vector_row_wise<<<num_blocks, TxB>>>(Y, A, b, x, y);
 }
 
-// =======================
-// =   CUBLAS FUNCTION   =
-// =======================
+// ========================
+// =   CUBLAS FUNCTIONS   =
+// ========================
 
 // Multiply the arrays A and B on GPU and save the result in C
 // Y(m,n) = W(m,k) * A(k,n)
-void gpu_blas_mmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, const int m, const int k, const int n) {
-    int lda=m,ldb=k,ldc=m;
-    const float alf = 1;
-    const float bet = 0;
+void gpu_blas_mmul(cublasHandle_t &handle, const float *W, cublasOperation_t W_op,
+        const float *A, cublasOperation_t A_op, float *Y,
+        const int m, const int n, const int k, const float batch_size, const float bet) {
+    int lda = 0,ldb = 0,ldc = m;
+    const float alf = 1.0f / batch_size;
+    const float *alpha = &alf;
+    const float *beta = &bet;
+    if(W_op == CUBLAS_OP_N && A_op == CUBLAS_OP_N) {
+        lda = m;
+        ldb = k;
+    }else if (W_op == CUBLAS_OP_T && A_op == CUBLAS_OP_N){
+        lda = k;
+        ldb = k;
+    }else if (W_op == CUBLAS_OP_N && A_op == CUBLAS_OP_T){
+        lda = m;
+        ldb = n;
+    }else{
+        throw std::invalid_argument("Operations not supported in gpu_blas_mmul");
+    }
+
+    cublasSgemm(handle, W_op, A_op, m, n, k, alpha, W, lda, A, ldb, beta, Y, ldc);
+}
+
+// TODO: implementare eventualemente con parallel reduction
+void gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, const int m, const int n,
+        const float batch_size, const float bet){
+    int lda = m;
+    const float alf = 1.0f / batch_size;
     const float *alpha = &alf;
     const float *beta = &bet;
 
-    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, W, lda, A, ldb, beta, Y, ldc);
+    //building a dummy 1s vector x
+    Matrix x = Matrix(m, 1);
+    x.allocate();
+    for (int i = 0; i<m; i++)
+        x[i] = 1.0f;
+    x.cpyHostToDev();
+
+    // Y = W * x
+    cublasSgemv(handle, CUBLAS_OP_N, m, n, alpha, W, lda, x.getDevData().get(), 1, beta, Y, 1);
 }
 
-// Y(m,n) = W(m,k) * A(k,n)
-void gpu_blas_mtmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, const int k, const int m,
-                    const int n){
+/*void gpu_blas_mtmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, const int m,
+                    const int n, const int k){
     int lda=k,ldb=k,ldc=m;
     const float alf = 1;
     const float bet = 0;
@@ -78,14 +109,13 @@ void gpu_blas_mtmul(cublasHandle_t &handle, const float *W, const float *A, floa
     cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, m, n, k, alpha, W, lda, A, ldb, beta, Y, ldc);
 }
 
-/*void gpu_blas_transpose(cublasHandle_t &handle, const float *W, float *Y, const int m, const int n){
-    const float alf = 1;
-    const float bet = 0;
-    const float *alpha = &alf;
+void gpu_blas_mmtul(cublasHandle_t &handle, const float *W, const float *A, float *Y, const int m, const int n,
+                    const int k, const float batch_size, const float bet){
+    int lda=m,ldb=n,ldc=m;
+    const float *alpha = &batch_size;
     const float *beta = &bet;
 
-    printf("%d \n", m);
-
-    cublasSgeam(handle, CUBLAS_OP_T, CUBLAS_OP_N, m, n, alpha, W, m, beta, W, n, Y, n);
+    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_T, m, n, k, alpha, W, lda, A, ldb, beta, Y, ldc);
 }*/
+
 
