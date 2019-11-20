@@ -3,6 +3,7 @@
 #include "cublas_v2.h"
 #include "src/utils/common.h"
 #include "src/layers/LinearLayer.h"
+#include "src/layers/SigmoidLayer.h"
 
 using namespace std;
 
@@ -39,8 +40,8 @@ int main() {
     cout << "top_diff:" << endl;
     cout << top_diff << endl;
 
-
-    Layer *l = new LinearLayer("prova", 3, features); // W
+    SigmoidLayer *l = new SigmoidLayer("Sigmoid");
+    //Layer *l = new LinearLayer("prova", 3, features); // W
 
     Matrix Y = l->forward(handle, A);
 
@@ -48,7 +49,7 @@ int main() {
     cout << "Y: " << endl;
     cout<< Y << endl;
 
-    l->backward(handle, top_diff);
+    //l->backward(handle, top_diff);
 
 
     cudaDeviceReset();

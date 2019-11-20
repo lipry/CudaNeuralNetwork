@@ -7,7 +7,13 @@ project(NeuralNetworkCUDA LANGUAGES C CXX CUDA)
 
 add_executable(NeuralNetworkCUDA main.cu dummy.cpp
         src/utils/Matrix.cu src/utils/Matrix.h
-        src/utils/common.h src/layers/Layer.h src/layers/LinearLayer.cu src/layers/LinearLayer.h src/utils/cudamath.cu src/utils/cudamath.h)
+        src/utils/common.h src/layers/Layer.h
+        src/layers/LinearLayer.cu
+        src/layers/LinearLayer.h
+        src/utils/cudamath.cu
+        src/utils/cudamath.h
+        src/layers/SigmoidLayer.cu
+        src/layers/SigmoidLayer.h)
 
 
 target_compile_features(NeuralNetworkCUDA PUBLIC cxx_std_14)

@@ -20,7 +20,7 @@ public:
     virtual Matrix& forward(cublasHandle_t handle, Matrix& A) = 0;
     virtual Matrix& backward(cublasHandle_t handle, Matrix& top_diff) = 0;
 
-    std::string getName() {
+    virtual std::string getName() {
         return this->name;
     };
 };
