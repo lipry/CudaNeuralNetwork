@@ -17,7 +17,7 @@ W(x, y), b(x, 1)
     this->name = name;
     W.allocate();
     b.allocate();
-    this->initWeights(false, 0.0f, 1.0f);
+    this->initWeights(true, 0.0f, 1.0f);
     this->initBias();
 
     W.cpyDevToHost();
@@ -45,22 +45,19 @@ Matrix &LinearLayer::forward(cublasHandle_t handle, Matrix &A) {
     gpu_add_bias(this->Y.getDevData().get(), this->b.getDevData().get(),
             this->Y.getDevData().get(), this->Y.getX(), this->Y.getY());
 
-    /*CHECK_CUBLAS(cublasSgemv(handle, CUBLAS_OP_T, W.getY(),
-                             W.getX(), &alpha, W.getDevData().get(), W.getY(),
-                             A.getDevData().get(), 1, &beta, Y.getDevData().get(), 1));
-
-    dim3 TxB(BLOCK_SIZE);
-    dim3 num_blocks((Y.getY() * Y.getX() + TxB.x - 1) / TxB.x);
-    add_vect<<<num_blocks, TxB>>>(Y.getDevData().get(), Y.getDevData().get(), b.getDevData().get(), Y.getX(), Y.getY());
-*/
-
-
-
     return Y;
 }
 
 Matrix &LinearLayer::backward(cublasHandle_t handle, Matrix &top_diff) {
-    return A;
+    dA.allocate_size(A.getX(), A.getY());
+
+    //k, m, n
+    gpu_blas_mtmul(handle, this->W.getDevData().get(), top_diff.getDevData().get(),
+                  this->dA.getDevData().get(), this->W.getX(), this->W.getY(), top_diff.getY());
+
+    dA.cpyDevToHost();
+    cout << dA << endl;
+    return dA;
 }
 
 void LinearLayer::initWeights(bool random, float lower, float higher) {

@@ -25,6 +25,19 @@ int main() {
     A.cpyHostToDev();
     cout << "A:" << endl;
     cout << A << endl;
+    Matrix top_diff = Matrix(3, n_entries);
+    top_diff.allocate();
+    count = 0;
+    for(int r = 0; r<3; r++){
+        for(int c=0; c<n_entries; c++){
+            top_diff[CMIDX(r, c, 3)] = count;
+            count++;
+        }
+    }
+
+    top_diff.cpyHostToDev();
+    cout << "top_diff:" << endl;
+    cout << top_diff << endl;
 
 
     Layer *l = new LinearLayer("prova", 3, features); // W
@@ -34,6 +47,8 @@ int main() {
     Y.cpyDevToHost();
     cout << "Y: " << endl;
     cout<< Y << endl;
+
+    l->backward(handle, top_diff);
 
 
     cudaDeviceReset();

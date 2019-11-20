@@ -18,11 +18,11 @@ __global__ void randoms(curandState_t* states, float* numbers, float lower, floa
 
 __global__ void add_vector_row_wise(float *R, float *A, float *V, int x, int y);
 
-
 void gpu_add_bias(float *A, float *b, float *Y, int x, int y);
 
 void gpu_blas_mmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int k, int n);
 
+void gpu_blas_mtmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int k, int m, int n);
 
 
 #endif //NEURALNETWORKCUDA_CUDAMATH_H
