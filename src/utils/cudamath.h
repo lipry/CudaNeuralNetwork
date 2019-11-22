@@ -30,6 +30,8 @@ void gpu_add_bias(float *A, float *b, float *Y, int x, int y);
 
 void gpu_sigmoid_forward(float *Z, float *Res, int x, int y);
 
+void gpu_sigmoid_backward(float *Z, float *Res, int x, int y);
+
 void gpu_blas_mmul(cublasHandle_t &handle, const float *W, cublasOperation_t W_op,
                    const float *A, cublasOperation_t A_op, float *Y,
                    int m, int k, int n, float batch_size = 1.0, float bet = 0.0f);

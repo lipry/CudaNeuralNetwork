@@ -26,12 +26,12 @@ int main() {
     A.cpyHostToDev();
     cout << "A:" << endl;
     cout << A << endl;
-    Matrix top_diff = Matrix(3, n_entries);
+    Matrix top_diff = Matrix(n_entries, features);
     top_diff.allocate();
     count = 0;
-    for(int r = 0; r<3; r++){
-        for(int c=0; c<n_entries; c++){
-            top_diff[CMIDX(r, c, 3)] = count;
+    for(int r = 0; r<n_entries; r++){
+        for(int c=0; c<features; c++){
+            top_diff[CMIDX(r, c, n_entries)] = count;
             count++;
         }
     }
@@ -49,7 +49,11 @@ int main() {
     cout << "Y: " << endl;
     cout<< Y << endl;
 
-    //l->backward(handle, top_diff);
+    Matrix b = l->backward(handle, top_diff);
+
+    b.cpyDevToHost();
+    cout << "sigmoid backward with mul" << endl;
+    cout << b << endl;
 
 
     cudaDeviceReset();

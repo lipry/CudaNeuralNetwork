@@ -44,8 +44,8 @@ __device__ float sigmoid(float x){
     return __frcp_rn(__fadd_rn(1, exp(-x)));
 }
 
-__device__ float sigmoid_derivate(float x, float top_diff){
-    return __fmul_rn(__fmul_rn(__fsub_rn(1.0f, x), x), top_diff);
+__device__ float sigmoid_derivate(float x){
+    return __fmul_rn(x, __fsub_rn(1.0f, x));
 }
 
 __global__ void sigmoidForward(float* R, float* V, int x, int y){
@@ -54,10 +54,10 @@ __global__ void sigmoidForward(float* R, float* V, int x, int y){
         R[index] = sigmoid(V[index]);
 }
 
-__global__ void sigmoidBackward(float* dR, float* V, float *top_diff, int x, int y){
+__global__ void sigmoidBackward(float* R, float* V, int x, int y){
     int index = blockDim.x * blockIdx.x + threadIdx.x;
     if(index < x*y)
-        dR[index] = sigmoid_derivate(V[index], top_diff[index]);
+        R[index] = sigmoid_derivate(V[index]);
 }
 
 // ========================
@@ -74,6 +74,12 @@ void gpu_sigmoid_forward(float *Z, float *Res, int x, int y){
     dim3 TxB(BLOCK_SIZE);
     dim3 num_blocks((x*y + TxB.x - 1) / TxB.x);
     sigmoidForward<<<num_blocks, TxB>>>(Res, Z, x, y);
+}
+
+void gpu_sigmoid_backward(float *Z, float *Res, int x, int y){
+    dim3 TxB(BLOCK_SIZE);
+    dim3 num_blocks((x*y + TxB.x - 1) / TxB.x);
+    sigmoidBackward<<<num_blocks, TxB>>>(Res, Z, x, y);
 }
 
 // ========================
