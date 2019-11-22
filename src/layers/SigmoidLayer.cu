@@ -21,7 +21,7 @@ Matrix &SigmoidLayer::forward(cublasHandle_t handle, Matrix &A) {
     return Res;
 }
 
-Matrix &SigmoidLayer::backward(cublasHandle_t handle, Matrix &top_diff) {
+Matrix &SigmoidLayer::backward(cublasHandle_t handle, Matrix &top_diff, float learning_rate) {
     Matrix sigmoid_res;
     sigmoid_res.allocate_size(this->Res.getX(), this->Res.getY());
 
@@ -34,7 +34,7 @@ Matrix &SigmoidLayer::backward(cublasHandle_t handle, Matrix &top_diff) {
     this->dZ.allocate_size(top_diff.getX(), this->Res.getY());
 
     gpu_blas_mmul(handle, top_diff.getDevData().get(), CUBLAS_OP_N, sigmoid_res.getDevData().get(), CUBLAS_OP_N,
-                    this->dZ.getDevData().get(), top_diff.getX(), sigmoid_res.getY(), top_diff.getY());
+                    this->dZ.getDevData().get(), top_diff.getX(), sigmoid_res.getY(), top_diff.getY(), learning_rate);
 
     return dZ;
 }

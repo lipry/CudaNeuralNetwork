@@ -26,22 +26,26 @@ __global__ void sigmoidForward(float* R, float* V, int x, int y);
 
 __global__ void sigmoidBackward(float* dR, float* V, float *top_diff, int x, int y);
 
+__global__ void binaryCrossEntropyCost(float* predictions, float* target, int size, float* cost);
+
 void gpu_add_bias(float *A, float *b, float *Y, int x, int y);
 
 void gpu_sigmoid_forward(float *Z, float *Res, int x, int y);
 
 void gpu_sigmoid_backward(float *Z, float *Res, int x, int y);
 
+float gpu_bce_cost(float *prediction, float *labels, int x);
+
 void gpu_blas_mmul(cublasHandle_t &handle, const float *W, cublasOperation_t W_op,
                    const float *A, cublasOperation_t A_op, float *Y,
-                   int m, int k, int n, float batch_size = 1.0, float bet = 0.0f);
+                   int m, int k, int n, float learning_rate = 1.0f, float batch_size = 1.0, float bet = 0.0f);
 
-void gpu_blas_mmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int n, int k);
+//void gpu_blas_mmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int n, int k);
 
 //void gpu_blas_mtmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int n, int k);
 
 //void gpu_blas_mmtul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int n, int k, float batch_size, float bet);
 
-void gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, int m, int n, float batch_size, float bet);
+void gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, int m, int n, float batch_size, float bet, float learning_rate);
 
 #endif //NEURALNETWORKCUDA_CUDAMATH_H

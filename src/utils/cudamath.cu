@@ -60,6 +60,16 @@ __global__ void sigmoidBackward(float* R, float* V, int x, int y){
         R[index] = sigmoid_derivate(V[index]);
 }
 
+//TODO: rifare con parallel reduction
+__global__ void binaryCrossEntropyCost(float* cost, float* predictions, float* target, int size) {
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < size) {
+        float partial_cost = target[index] * logf(predictions[index])
+                             + (1.0f - target[index]) * logf(1.0f - predictions[index]);
+        atomicAdd(cost, -partial_cost / size);
+    }
+}
+
 // ========================
 // =   KERNEL FUNCTIONS   =
 // ========================
@@ -82,6 +92,20 @@ void gpu_sigmoid_backward(float *Z, float *Res, int x, int y){
     sigmoidBackward<<<num_blocks, TxB>>>(Res, Z, x, y);
 }
 
+float gpu_bce_cost(float *prediction, float *labels, int x){
+    Matrix cost = Matrix(1, 1);
+    cost.allocate();
+    cost.cpyHostToDev();
+    dim3 TxB(BLOCK_SIZE);
+    dim3 num_blocks((x + TxB.x - 1) / TxB.x);
+    binaryCrossEntropyCost<<<num_blocks, TxB>>>(cost.getDevData().get(), prediction, labels, x);
+
+    cudaDeviceSynchronize(); // todo: serve?!
+    cost.cpyDevToHost();
+
+    return *cost.getHostData().get();
+}
+
 // ========================
 // =   CUBLAS FUNCTIONS   =
 // ========================
@@ -90,9 +114,9 @@ void gpu_sigmoid_backward(float *Z, float *Res, int x, int y){
 // Y(m,n) = W(m,k) * A(k,n)
 void gpu_blas_mmul(cublasHandle_t &handle, const float *W, cublasOperation_t W_op,
         const float *A, cublasOperation_t A_op, float *Y,
-        const int m, const int n, const int k, const float batch_size, const float bet) {
+        const int m, const int n, const int k, float learning_rate, const float batch_size, const float bet) {
     int lda = 0,ldb = 0,ldc = m;
-    const float alf = 1.0f / batch_size;
+    const float alf = (1.0f / batch_size) * learning_rate;
     const float *alpha = &alf;
     const float *beta = &bet;
     if(W_op == CUBLAS_OP_N && A_op == CUBLAS_OP_N) {
@@ -112,10 +136,10 @@ void gpu_blas_mmul(cublasHandle_t &handle, const float *W, cublasOperation_t W_o
 }
 
 // TODO: implementare eventualemente con parallel reduction
-void gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, const int m, const int n,
+void gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, const int m, const int n, float learning_rate,
         const float batch_size, const float bet){
     int lda = m;
-    const float alf = 1.0f / batch_size;
+    const float alf = (1.0f / batch_size) * learning_rate;
     const float *alpha = &alf;
     const float *beta = &bet;
 

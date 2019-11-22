@@ -18,7 +18,7 @@ public:
     virtual ~Layer() {};
 
     virtual Matrix& forward(cublasHandle_t handle, Matrix& A) = 0;
-    virtual Matrix& backward(cublasHandle_t handle, Matrix& top_diff) = 0;
+    virtual Matrix& backward(cublasHandle_t handle, Matrix& top_diff, float learning_rate) = 0;
 
     virtual std::string getName() {
         return this->name;

@@ -21,7 +21,7 @@ public:
 
     Matrix &forward(cublasHandle_t handle, Matrix &A);
 
-    Matrix &backward(cublasHandle_t handle, Matrix &top_diff);
+    Matrix &backward(cublasHandle_t handle, Matrix &top_diff, float learning_rate);
 
     std::string getName() override;
 

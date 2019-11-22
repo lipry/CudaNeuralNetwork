@@ -23,7 +23,7 @@ private:
     //for backward
     Matrix dA;
 
-    void initWeights(bool random, float lower = 0.0f, float higher = 1.0f);
+    void initWeights(bool random, float lower = 0.0f, float higher = 0.0f);
     void initBias();
 
     void initZeroes(Matrix &x, float n);
@@ -34,7 +34,7 @@ public:
     ~LinearLayer();
 
     Matrix& forward(cublasHandle_t handle, Matrix& A);
-    Matrix& backward(cublasHandle_t handle, Matrix& top_diff);
+    Matrix& backward(cublasHandle_t handle, Matrix& top_diff, float learning_rate);
 
     Matrix& getWeigths();
     Matrix& getBias();
