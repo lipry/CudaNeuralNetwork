@@ -70,6 +70,15 @@ __global__ void binaryCrossEntropyCost(float* cost, float* predictions, float* t
     }
 }
 
+
+__global__ void dBinaryCrossEntropyCost(float* predictions, float* target, float* dY, int x) {
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (index < x) {
+        dY[index] = -1.0 * ( target[index]/predictions[index] - (1 - target[index])/(1 - predictions[index]) );
+    }
+}
+
 // ========================
 // =   KERNEL FUNCTIONS   =
 // ========================
@@ -92,18 +101,18 @@ void gpu_sigmoid_backward(float *Z, float *Res, int x, int y){
     sigmoidBackward<<<num_blocks, TxB>>>(Res, Z, x, y);
 }
 
-float gpu_bce_cost(float *prediction, float *labels, int x){
-    Matrix cost = Matrix(1, 1);
-    cost.allocate();
-    cost.cpyHostToDev();
+void gpu_bce_cost(float *cost, float *prediction, float *labels, int x){
     dim3 TxB(BLOCK_SIZE);
     dim3 num_blocks((x + TxB.x - 1) / TxB.x);
-    binaryCrossEntropyCost<<<num_blocks, TxB>>>(cost.getDevData().get(), prediction, labels, x);
+    binaryCrossEntropyCost<<<num_blocks, TxB>>>(cost, prediction, labels, x);
 
     cudaDeviceSynchronize(); // todo: serve?!
-    cost.cpyDevToHost();
+}
 
-    return *cost.getHostData().get();
+void gpu_derivative_bce_cost(float *dY, float* predictions, float* target, int x){
+    dim3 TxB(BLOCK_SIZE);
+    dim3 num_blocks((x + TxB.x - 1) / TxB.x);
+    dBinaryCrossEntropyCost<<<num_blocks, TxB>>>(predictions, target, dY, x);
 }
 
 // ========================

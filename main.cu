@@ -81,10 +81,14 @@ int main() {
     y.cpyHostToDev();
     labels.cpyHostToDev();
 
-    BinaryCrossEntropy bce = BinaryCrossEntropy();
-    float c = bce.getCost(y, labels);
+    Matrix dY = Matrix(5, 1);
+    dY.allocate();
 
-    cout << "cost: " << c << endl;
+    BinaryCrossEntropy bce = BinaryCrossEntropy();
+    float cost = bce.getCost(y, labels);
+
+    //dY.cpyDevToHost();
+    cout << "cost: " << cost << endl;
 
     cudaDeviceReset();
     return 0;

@@ -28,13 +28,17 @@ __global__ void sigmoidBackward(float* dR, float* V, float *top_diff, int x, int
 
 __global__ void binaryCrossEntropyCost(float* predictions, float* target, int size, float* cost);
 
+__global__ void dBinaryCrossEntropyCost(float* predictions, float* target, float* dY, int x);
+
 void gpu_add_bias(float *A, float *b, float *Y, int x, int y);
 
 void gpu_sigmoid_forward(float *Z, float *Res, int x, int y);
 
 void gpu_sigmoid_backward(float *Z, float *Res, int x, int y);
 
-float gpu_bce_cost(float *prediction, float *labels, int x);
+void gpu_bce_cost(float *cost, float *prediction, float *labels, int x);
+
+void gpu_derivative_bce_cost(float *dY, float* predictions, float* target, int x);
 
 void gpu_blas_mmul(cublasHandle_t &handle, const float *W, cublasOperation_t W_op,
                    const float *A, cublasOperation_t A_op, float *Y,

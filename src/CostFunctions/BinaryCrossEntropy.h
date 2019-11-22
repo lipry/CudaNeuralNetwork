@@ -11,7 +11,7 @@
 class BinaryCrossEntropy : public CostFunctions{
 public:
     float getCost(Matrix predictions, Matrix labels);
-    Matrix getDCost(Matrix predictions, Matrix label, Matrix dY);
+    Matrix getDCost(Matrix predictions, Matrix labels, Matrix dY);
 };
 
 
