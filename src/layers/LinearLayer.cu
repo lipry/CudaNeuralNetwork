@@ -20,6 +20,7 @@ W(x, y), b(x, 1)
     this->initWeights(false, 0.0f, 1.0f);
     this->initBias();
 
+    // TODO: rimuovere stampe
     W.cpyDevToHost();
     cout << "Weights" << endl;
     cout << W << endl;
@@ -98,7 +99,7 @@ void LinearLayer::initWeights(bool random, float lower, float higher) {
         randoms<<<num_blocks, TxB>>>(states, this->W.getDevData().get(), lower, higher);
 
     }else{
-        initZeroes(this->W, 3);
+        initZeroes(this->W, 0.5f);
         this->W.cpyHostToDev();
     }
 

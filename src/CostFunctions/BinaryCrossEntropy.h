@@ -6,9 +6,9 @@
 #define NEURALNETWORKCUDA_BINARYCROSSENTROPY_H
 
 
-#include "CostFunctions.h"
+#include "CostFunction.h"
 
-class BinaryCrossEntropy : public CostFunctions{
+class BinaryCrossEntropy : public CostFunction{
 public:
     float getCost(Matrix predictions, Matrix labels);
     Matrix getDCost(Matrix predictions, Matrix labels, Matrix dY);

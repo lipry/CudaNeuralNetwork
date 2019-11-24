@@ -13,7 +13,7 @@ add_executable(NeuralNetworkCUDA main.cu dummy.cpp
         src/utils/cudamath.cu
         src/utils/cudamath.h
         src/layers/SigmoidLayer.cu
-        src/layers/SigmoidLayer.h src/CostFunctions/CostFunctions.h src/CostFunctions/BinaryCrossEntropy.cu src/CostFunctions/BinaryCrossEntropy.h)
+        src/layers/SigmoidLayer.h src/CostFunctions/CostFunction.h src/CostFunctions/BinaryCrossEntropy.cu src/CostFunctions/BinaryCrossEntropy.h src/NeuralNetwork.cu src/NeuralNetwork.h)
 
 
 target_compile_features(NeuralNetworkCUDA PUBLIC cxx_std_14)

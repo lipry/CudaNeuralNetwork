@@ -2,13 +2,13 @@
 // Created by Fabio Lipreri on 2019-11-22.
 //
 
-#ifndef NEURALNETWORKCUDA_COSTFUNCTIONS_H
-#define NEURALNETWORKCUDA_COSTFUNCTIONS_H
+#ifndef NEURALNETWORKCUDA_COSTFUNCTION_H
+#define NEURALNETWORKCUDA_COSTFUNCTION_H
 
 #include <string>
 #include "../utils/Matrix.h"
 
-class CostFunctions {
+class CostFunction {
 protected:
     std::string name;
 public:
@@ -22,4 +22,4 @@ public:
 
 };
 
-#endif //NEURALNETWORKCUDA_COSTFUNCTIONS_H
+#endif //NEURALNETWORKCUDA_COSTFUNCTION_H
