@@ -8,10 +8,10 @@
 
 #include "CostFunction.h"
 
-class BinaryCrossEntropy : public CostFunction{
+class BinaryCrossEntropy : public CostFunction {
 public:
-    float getCost(Matrix predictions, Matrix labels);
-    Matrix getDCost(Matrix predictions, Matrix labels, Matrix dY);
+    float getCost(Matrix predictions, Matrix labels) override;
+    Matrix getDCost(Matrix predictions, Matrix labels, Matrix dY) override;
 };
 
 

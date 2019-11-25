@@ -33,13 +33,28 @@ int main() {
     cout << "A: " << endl;
     cout << A << endl;
 
+    Matrix Y_Labels = Matrix(n_entries, 1);
+    Y_Labels.allocate();
+    for(int i = 0; i < n_entries; i++){
+        Y_Labels[i] = 0.7;
+    }
+
+    Y_Labels[1] = 0.3;
+    Y_Labels[3] = 0.9;
+
+    Y_Labels.cpyHostToDev();
+
+
     NeuralNetwork nn = NeuralNetwork(1.0f);
     nn.newLayer(new LinearLayer("linear_layer1", 3, features));
-    nn.newLayer(new SigmoidLayer("sigmoid1"));
-    nn.newLayer(new LinearLayer("linear_layer2", 1, features));
-    nn.newLayer(new SigmoidLayer("sigmoid1"));
+    //nn.newLayer(new SigmoidLayer("sigmoid1"));
+    nn.newLayer(new LinearLayer("linear_layer2", 3, features));
+    //nn.newLayer(new SigmoidLayer("sigmoid1"));
+
+    nn.setCostFunction(new BinaryCrossEntropy());
 
     Matrix Y = nn.forward(handle, A);
+    nn.backprop(handle, Y, Y_Labels);
 
     Y.cpyDevToHost();
 

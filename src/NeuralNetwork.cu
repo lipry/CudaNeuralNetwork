@@ -4,6 +4,8 @@
 
 #include "NeuralNetwork.h"
 
+using namespace std;
+
 NeuralNetwork::NeuralNetwork(float lr) : learningRate(lr){}
 
 void NeuralNetwork::newLayer(Layer *l) {
@@ -25,5 +27,13 @@ Matrix NeuralNetwork::forward(cublasHandle_t handle, Matrix X) {
 }
 
 void NeuralNetwork::backprop(cublasHandle_t handle, Matrix predictions, Matrix labels) {
+    dY.allocate_size(predictions.getX(), 1);
 
+    Matrix top_diff = this->cost->getDCost(predictions, labels, dY);
+
+    for(auto it = nn_layers.rbegin(); it != nn_layers.rend(); it++ ){
+        top_diff = (*it)->backward(handle, top_diff, this->learningRate);
+    }
+
+    cudaDeviceSynchronize();
 }
