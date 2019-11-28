@@ -20,7 +20,7 @@ Matrix &SigmoidLayer::forward(cublasHandle_t handle, Matrix &A) {
     gpu_sigmoid_forward(this->Z.getDevData().get(), this->Res.getDevData().get(), this->Res.getX(), this->Res.getY());
 
     // TODO: togliere stampa
-    Res.cpyDevToHost(); 
+    Res.cpyDevToHost();
     cout << "Y signmoid"<< endl;
     cout << Res << endl;
     return Res;

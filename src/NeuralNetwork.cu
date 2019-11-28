@@ -20,6 +20,7 @@ Matrix NeuralNetwork::forward(cublasHandle_t handle, Matrix X) {
     Matrix tmp = X;
     for(auto it = std::begin(nn_layers); it != std::end(nn_layers); ++it){
 
+        //TODO: rimuovere stampe
         //tmp.cpyDevToHost();
         cout << (*it)->getName() << " FORWARD" << endl;
         //cout << tmp << endl;
@@ -41,6 +42,8 @@ void NeuralNetwork::backprop(cublasHandle_t handle, Matrix predictions, Matrix l
     dY.allocate_size(predictions.getX(), 1);
 
     Matrix top_diff = this->cost->getDCost(predictions, labels, dY);
+
+    //TODO: rimuovere stampe
 
     for(auto it = nn_layers.rbegin(); it != nn_layers.rend(); it++){
         cout << (*it)->getName() << " BACKWARD" << endl;

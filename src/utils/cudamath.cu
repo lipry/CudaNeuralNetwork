@@ -81,6 +81,24 @@ __global__ void dBinaryCrossEntropyCost(float* predictions, float* target, float
     }
 }
 
+__global__ void reluForward(float* R, float* V, int x, int y){
+    int index = blockDim.x * blockIdx.x + threadIdx.x;
+    if(index < x*y)
+        R[index] = fmaxf(V[index], 0);
+}
+
+//TODO: lavorare sulla divergenza di warp, risolve il compilatore?
+__global__ void reluBackward(float* dZ, float* top_diff, float* V, int x, int y){
+    int index = blockDim.x * blockIdx.x + threadIdx.x;
+    if(index < x*y){
+        if(V[index] > 0) {
+            dZ[index] = top_diff[index];
+        }else{
+            dZ[index] = 0;
+        }
+    }
+}
+
 // ========================
 // =   KERNEL FUNCTIONS   =
 // ========================
@@ -101,6 +119,18 @@ void gpu_sigmoid_backward(float *Z, float *Res, int x, int y){
     dim3 TxB(BLOCK_SIZE);
     dim3 num_blocks((x*y + TxB.x - 1) / TxB.x);
     sigmoidBackward<<<num_blocks, TxB>>>(Res, Z, x, y);
+}
+
+void gpu_relu_backward(float *Z, float* top_diff, float *Res, int x, int y){
+    dim3 TxB(BLOCK_SIZE);
+    dim3 num_blocks((x*y + TxB.x - 1) / TxB.x);
+    reluBackward<<<num_blocks, TxB>>>(Res, top_diff, Z, x, y);
+}
+
+void gpu_relu_forward(float *Z, float *Res, int x, int y){
+    dim3 TxB(BLOCK_SIZE);
+    dim3 num_blocks((x*y + TxB.x - 1) / TxB.x);
+    reluForward<<<num_blocks, TxB>>>(Res, Z, x, y);
 }
 
 void gpu_bce_cost(float *cost, float *prediction, float *labels, int x){

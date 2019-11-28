@@ -6,6 +6,7 @@
 #include "src/layers/SigmoidLayer.h"
 #include "src/CostFunctions/BinaryCrossEntropy.h"
 #include "src/NeuralNetwork.h"
+#include "src/layers/ReluLayer.h"
 
 using namespace std;
 
@@ -25,7 +26,7 @@ int main() {
             //count++;
         }
     }
-    A[CMIDX(1, 0, features)] = 1;
+    A[CMIDX(1, 0, features)] = -3;
     A[CMIDX(0, 3, features)] = 1;
 
     A.cpyHostToDev();
@@ -47,7 +48,7 @@ int main() {
 
     NeuralNetwork nn = NeuralNetwork(1.0f);
     nn.newLayer(new LinearLayer("linear_layer1", 3, features));
-    nn.newLayer(new SigmoidLayer("sigmoid1"));
+    nn.newLayer(new ReluLayer("relu1"));
     nn.newLayer(new LinearLayer("linear_layer2", 1, 3));
     nn.newLayer(new SigmoidLayer("sigmoid_out"));
 

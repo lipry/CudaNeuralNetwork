@@ -64,7 +64,6 @@ Matrix &LinearLayer::forward(cublasHandle_t handle, Matrix &A) {
     return Y;
 }
 
-//TODO: fixare batch size hardcoded
 Matrix &LinearLayer::backward(cublasHandle_t handle, Matrix &top_diff, float learning_rate) {
     dA.allocate_size(A.getX(), A.getY());
 

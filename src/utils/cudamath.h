@@ -30,11 +30,19 @@ __global__ void binaryCrossEntropyCost(float* predictions, float* target, int si
 
 __global__ void dBinaryCrossEntropyCost(float* predictions, float* target, float* dY, int x);
 
+__global__ void reluForward(float* R, float* V, int x, int y);
+
+__global__ void reluBackward(float* dZ, float* top_diff, float* V, int x, int y);
+
 void gpu_add_bias(float *A, float *b, float *Y, int x, int y);
 
 void gpu_sigmoid_forward(float *Z, float *Res, int x, int y);
 
 void gpu_sigmoid_backward(float *Z, float *Res, int x, int y);
+
+void gpu_relu_backward(float *Z, float* top_diff, float *Res, int x, int y);
+
+void gpu_relu_forward(float *Z, float *Res, int x, int y);
 
 void gpu_bce_cost(float *cost, float *prediction, float *labels, int x);
 
