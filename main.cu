@@ -1,18 +1,34 @@
 #include <iostream>
+#include <cstring>
 #include "src/utils/Matrix.h"
 #include "cublas_v2.h"
 #include "src/utils/common.h"
 #include "src/layers/LinearLayer.h"
 #include "src/layers/SigmoidLayer.h"
-#include "src/CostFunctions/BinaryCrossEntropy.h"
+#include "src/cost_functions/BinaryCrossEntropy.h"
 #include "src/NeuralNetwork.h"
 #include "src/layers/ReluLayer.h"
+#include "src/datasets/MNISTParser.h"
 
 using namespace std;
 
-
 int main() {
-    cublasHandle_t handle;
+
+    std::string image_file = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/t10k-images-idx3-ubyte";
+    std::string labels_file = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/t10k-labels-idx1-ubyte";
+
+    MNISTDataset mnist;
+
+    mnist.Parse(image_file.c_str(), labels_file.c_str());
+
+    //cout << mnist.GetImageCount() << endl;
+    //mnist.Print();
+
+    //FILE* fimg = nullptr;
+    //cout << fopen("/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/prova.txt", "r") << endl;
+    //printf("Oh dear, something went wrong with read()! %s\n", strerror(errno));
+
+    /*cublasHandle_t handle;
     CHECK_CUBLAS(cublasCreate(&handle));
 
     int features = 2;
@@ -65,7 +81,7 @@ int main() {
         cout << Y << endl;
 
         nn.backprop(handle, Y, Y_Labels);
-    }
+    }*/
 
 
     // Y(m,n) = W(m,k) * A(k,n)

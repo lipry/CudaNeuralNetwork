@@ -7,7 +7,7 @@
 
 #include <vector>
 #include "layers/Layer.h"
-#include "CostFunctions/CostFunction.h"
+#include "cost_functions/CostFunction.h"
 
 
 class NeuralNetwork {
