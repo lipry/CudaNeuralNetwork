@@ -47,19 +47,24 @@ int main() {
 
     NeuralNetwork nn = NeuralNetwork(1.0f);
     nn.newLayer(new LinearLayer("linear_layer1", 3, features));
-    //nn.newLayer(new SigmoidLayer("sigmoid1"));
-    nn.newLayer(new LinearLayer("linear_layer2", 3, features));
-    //nn.newLayer(new SigmoidLayer("sigmoid1"));
+    nn.newLayer(new SigmoidLayer("sigmoid1"));
+    nn.newLayer(new LinearLayer("linear_layer2", 1, 3));
+    nn.newLayer(new SigmoidLayer("sigmoid_out"));
 
     nn.setCostFunction(new BinaryCrossEntropy());
 
-    Matrix Y = nn.forward(handle, A);
-    nn.backprop(handle, Y, Y_Labels);
+    Matrix Y;
+    for (int e = 0; e < 2; e ++) {
+        cout << "EPOCA" << e << endl;
+        Y = nn.forward(handle, A);
 
-    Y.cpyDevToHost();
 
-    cout << "Y: " << endl;
-    cout << Y << endl;
+        Y.cpyDevToHost();
+        cout << "Y: " << endl;
+        cout << Y << endl;
+
+        nn.backprop(handle, Y, Y_Labels);
+    }
 
 
     // Y(m,n) = W(m,k) * A(k,n)

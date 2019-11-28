@@ -14,6 +14,7 @@ class LinearLayer : public Layer {
     //Y=𝑊𝐴+𝑏
 private:
     // parameters
+    // TODO: incorporare bias nella matrice W
     Matrix W;
     Matrix b;
 
