@@ -211,9 +211,9 @@ void gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, const
 }
 
 void gpu_blas_mmtul(cublasHandle_t &handle, const float *W, const float *A, float *Y, const int m, const int n,
-                    const int k, const float batch_size, const float bet){
+                    const int k, const float batchSize, const float bet){
     int lda=m,ldb=n,ldc=m;
-    const float *alpha = &batch_size;
+    const float *alpha = &batchSize;
     const float *beta = &bet;
 
     cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_T, m, n, k, alpha, W, lda, A, ldb, beta, Y, ldc);

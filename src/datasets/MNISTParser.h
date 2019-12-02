@@ -22,50 +22,41 @@
 #include <assert.h>
 #include <byteswap.h>
 #include <iostream>
+#include <vector>
+#include "../utils/Matrix.h"
+#include "../utils/common.h"
 
-//
-// C++ MNIST dataset parser
-// 
-// Specification can be found in http://yann.lecun.com/exdb/mnist/
-//
 using namespace std;
 
 class MNISTDataset final
 {
 public:
-    MNISTDataset()
+    MNISTDataset(int batch_size)
         : m_count(0),
         m_width(0),
         m_height(0),
         m_imageSize(0),
-        m_buffer(nullptr),
-        m_imageBuffer(nullptr),
-        m_categoryBuffer(nullptr)
+        batchSize(batch_size)
     {
     }
 
-    ~MNISTDataset()
-    {
-        if (m_buffer) free(m_buffer);
-        if (m_categoryBuffer) free(m_categoryBuffer);
-    }
+    MNISTDataset(){}
 
+    ~MNISTDataset(){}
 
     void Print()
     {
-        for (size_t n = 0; n < m_count; ++n)
-        {
-            const float* imageBuffer = &m_imageBuffer[n * m_imageSize];
-            for (size_t j = 0; j < m_height; ++j)
-            {
-                for (size_t i = 0; i < m_width; ++i)
-                {
-                    printf("%3d ", (uint8_t)imageBuffer[j * m_width + i]);
+        for(size_t b_id = 0; b_id < batches.size(); b_id++){
+            for(size_t img = 0; img < batches[b_id].getY(); img++){
+                for (size_t j = 0; j < m_height; ++j) {
+                    for (size_t i = 0; i < m_width; ++i) {
+                        //CMIDX(r, c, n_righe)
+                        printf("%3d ", (uint8_t)batches[b_id][CMIDX(j * m_width + i, img, batches[b_id].getX())]);
+                    }
+                    printf("\n");
                 }
-                printf("\n");
+                printf("\n\n\ncat(%u)\n\n", (uint8_t)labels[b_id][img]);
             }
-
-            printf("\n [%d] ===> cat(%u)\n\n", n, m_categoryBuffer[n]);
         }
     }
 
@@ -89,21 +80,14 @@ public:
         return m_imageSize;
     }
 
-    const float* GetImageData() const
-    {
-        return m_imageBuffer;
+    const vector<Matrix> &getBatches() const {
+        return batches;
     }
 
-    const uint8_t* GetCategoryData() const
-    {
-        return m_categoryBuffer;
+    const vector<Matrix> &getLabels() const {
+        return labels;
     }
 
-    //
-    // Parse MNIST dataset
-    // Specification of the dataset can be found in:
-    // http://yann.lecun.com/exdb/mnist/
-    //
     int Parse(const char* imageFile, const char* labelFile)
     {
         FILE* fimg = nullptr;
@@ -170,10 +154,22 @@ public:
         Initialize(cols, rows, count);
 
         size_t counter = 0;
+        Matrix current_batch = Matrix(m_imageSize, batchSize);
+        current_batch.allocate();
+        Matrix current_labels = Matrix(batchSize, 1);
+        current_labels.allocate();
+        size_t batchCounter = 0;
+
         while (!feof(fimg) && !feof(flabel) && counter < m_count)
         {
-            float* imageBuffer = &m_imageBuffer[counter * m_imageSize];
+            if(batchCounter == batchSize) {
+                batches.push_back(current_batch);
+                labels.push_back(current_labels);
 
+                current_batch.allocate();
+                current_labels.allocate();
+                batchCounter = 0;
+            }
             for (size_t j = 0; j < m_height; ++j)
             {
                 for (size_t i = 0; i < m_width; ++i)
@@ -181,20 +177,27 @@ public:
                     uint8_t pixel;
                     fread(&pixel, sizeof(uint8_t), 1, fimg);
 
-                    imageBuffer[j * m_width + i] = pixel;
+                    //CMIDX(r, c, n_righe)
+                    current_batch[CMIDX(j * m_width + i, batchCounter, m_imageSize)] = pixel;
                 }
             }
 
             uint8_t cat;
             fread(&cat, sizeof(uint8_t), 1, flabel);
             // assert(cat >= 0 && cat < c_categoryCount);
-            m_categoryBuffer[counter] = cat;
+            current_labels[batchCounter] = cat;
 
+            ++batchCounter;
             ++counter;
         }
 
+        assert(batches.size() == labels.size());
+
+        cout << "Batches: "<< batches.size() << endl;
+
         return 0;
     }
+
 private:
     void Initialize(const size_t width, const size_t height, const size_t count)
     {
@@ -202,10 +205,6 @@ private:
         m_height = height;
         m_imageSize = m_width * m_height;
         m_count = count;
-
-        m_buffer = (float*)malloc(m_count * m_imageSize * sizeof(float));
-        m_imageBuffer = m_buffer;
-        m_categoryBuffer = (uint8_t*)malloc(m_count * sizeof(uint8_t));
     }
 
     // The total number of images
@@ -216,13 +215,8 @@ private:
     size_t m_height;
     size_t m_imageSize;
 
-    float* m_imageBuffer;
+    int batchSize;
 
-    static const int c_categoryCount = 10;
-
-    // 1-of-N label of the image data (N = 10) 
-    uint8_t* m_categoryBuffer;
-
-    // The entire buffers that stores both the image data and the category data
-    float* m_buffer;
+    std::vector<Matrix> batches;
+    std::vector<Matrix> labels;
 };

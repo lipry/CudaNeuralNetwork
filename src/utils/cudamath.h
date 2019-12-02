@@ -56,7 +56,7 @@ void gpu_blas_mmul(cublasHandle_t &handle, const float *W, cublasOperation_t W_o
 
 //void gpu_blas_mtmul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int n, int k);
 
-//void gpu_blas_mmtul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int n, int k, float batch_size, float bet);
+//void gpu_blas_mmtul(cublasHandle_t &handle, const float *W, const float *A, float *Y, int m, int n, int k, float batchSize, float bet);
 
 void gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, int m, int n, float batch_size, float bet, float learning_rate);
 

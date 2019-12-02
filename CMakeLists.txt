@@ -20,8 +20,10 @@ add_executable(NeuralNetworkCUDA main.cu dummy.cpp
         src/NeuralNetwork.cu src/NeuralNetwork.h
         src/layers/ReluLayer.cu
         src/layers/ReluLayer.h
-        src/datasets/MNISTParser.h)
+        src/datasets/MNISTParser.h
+        src/datasets/PulsarParser.h
+        src/utils/csv.h)
 
 
 target_compile_features(NeuralNetworkCUDA PUBLIC cxx_std_14)
-target_link_libraries(NeuralNetworkCUDA -lcublas -lcurand)
+target_link_libraries(NeuralNetworkCUDA -lcublas -lcurand -lpthread)

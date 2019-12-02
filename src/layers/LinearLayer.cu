@@ -98,7 +98,7 @@ Matrix &LinearLayer::backward(cublasHandle_t handle, Matrix &top_diff, float lea
     cout << b << endl;
 
     //gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, const int m, const int n, float learning_rate,
-    //        const float batch_size, const float bet)
+    //        const float batchSize, const float bet)
     gpu_blas_sum_column(handle, top_diff.getDevData().get(),  b.getDevData().get(), top_diff.getX(),
             top_diff.getY(), learning_rate, this->A.getY(), 1.0f);
 

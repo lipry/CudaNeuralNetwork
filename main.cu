@@ -9,29 +9,28 @@
 #include "src/NeuralNetwork.h"
 #include "src/layers/ReluLayer.h"
 #include "src/datasets/MNISTParser.h"
+#include "src/utils/csv.h"
+#include "src/datasets/PulsarParser.h"
 
 using namespace std;
 
 int main() {
-
-    std::string image_file = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/t10k-images-idx3-ubyte";
-    std::string labels_file = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/t10k-labels-idx1-ubyte";
-
-    MNISTDataset mnist;
-
-    mnist.Parse(image_file.c_str(), labels_file.c_str());
-
-    //cout << mnist.GetImageCount() << endl;
-    //mnist.Print();
-
-    //FILE* fimg = nullptr;
-    //cout << fopen("/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/prova.txt", "r") << endl;
-    //printf("Oh dear, something went wrong with read()! %s\n", strerror(errno));
-
-    /*cublasHandle_t handle;
+    cublasHandle_t handle;
     CHECK_CUBLAS(cublasCreate(&handle));
 
-    int features = 2;
+    std::string data_path = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/pulsar_stars.csv";
+    //std::string labels_file = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/t10k-labels-idx1-ubyte";
+    PulsarParser pulsar = PulsarParser(10);
+    pulsar.Parse(data_path);
+
+    //mnist.Print();
+
+    /*for(int i = 0; i < 3; i++) {
+        Matrix x = mnist.getNextBatch();
+        cout << x << "\n" << endl;
+    }*/
+
+    /*int features = 2;
     int n_entries = 4;
     Matrix A = Matrix(features, n_entries);
     A.allocate();
@@ -42,7 +41,7 @@ int main() {
             //count++;
         }
     }
-    A[CMIDX(1, 0, features)] = -3;
+    A[CMIDX(1, 0, features)] = 1;
     A[CMIDX(0, 3, features)] = 1;
 
     A.cpyHostToDev();
@@ -50,14 +49,18 @@ int main() {
     cout << "A: " << endl;
     cout << A << endl;
 
-    Matrix Y_Labels = Matrix(n_entries, 1);
+    Matrix Y_Labels = Matrix(n_entries, 10);
     Y_Labels.allocate();
     for(int i = 0; i < n_entries; i++){
-        Y_Labels[i] = 0.7;
+        for(int c = 0; c<10; c++) {
+            Y_Labels[CMIDX(i, c, n_entries)] = 0;
+        }
     }
 
-    Y_Labels[1] = 0.3;
-    Y_Labels[3] = 0.9;
+    Y_Labels[CMIDX(0, 3, n_entries)] = 1.0;
+    Y_Labels[CMIDX(0, 3, n_entries)] = 1.0;
+    Y_Labels[CMIDX(0, 3, n_entries)] = 1.0;
+    Y_Labels[CMIDX(0, 3, n_entries)] = 1.0;
 
     Y_Labels.cpyHostToDev();
 
@@ -65,7 +68,7 @@ int main() {
     NeuralNetwork nn = NeuralNetwork(1.0f);
     nn.newLayer(new LinearLayer("linear_layer1", 3, features));
     nn.newLayer(new ReluLayer("relu1"));
-    nn.newLayer(new LinearLayer("linear_layer2", 1, 3));
+    nn.newLayer(new LinearLayer("linear_layer2", 10, 3));
     nn.newLayer(new SigmoidLayer("sigmoid_out"));
 
     nn.setCostFunction(new BinaryCrossEntropy());
