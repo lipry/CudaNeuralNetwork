@@ -23,6 +23,8 @@ int main() {
     PulsarParser pulsar = PulsarParser(10);
     pulsar.Parse(data_path);
 
+    pulsar.Print();
+
     //mnist.Print();
 
     /*for(int i = 0; i < 3; i++) {

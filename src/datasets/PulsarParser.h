@@ -48,7 +48,17 @@ public:
 
     ~PulsarParser(){}
 
-    void Print(){}
+    void Print(){
+        for(size_t b_id = 0; b_id < batches.size(); b_id++){
+            for (int c = 0; c < batches[b_id].getY(); c++){
+                for (int r=0; r < batches[b_id].getX(); r++){
+                    cout << batches[b_id][CMIDX(r, c, batches[b_id].getX())] << " ";
+                }
+                cout << " ---> " << labels[b_id][c] << "\n\n";
+            }
+
+        }
+    }
 
     int getBatchSize() const {
         return batchSize;
@@ -56,7 +66,7 @@ public:
 
     int Parse(std::string csvPath)
     {
-        io::CSVReader<FEATURES+1> in(csvPath);
+        io::CSVReader<8+1> in(csvPath);
         in.read_header(io::ignore_no_column,
                 "Mean of the integrated profile",
                 "Standard deviation of the integrated profile",
@@ -67,7 +77,7 @@ public:
                 "Excess kurtosis of the DM-SNR curve",
                 "Skewness of the DM-SNR curve",
                 "target_class");
-        float items[FEATURES];
+        float items[8];
         float target_class;
 
         size_t batchCounter = 0;
@@ -90,8 +100,8 @@ public:
                 batchCounter = 0;
             }
 
-            for(int r=0; r < FEATURES; r++) {
-                batches[batches.size()-1][CMIDX(r, batchCounter, FEATURES)] = items[r];
+            for(int r=0; r < 8; r++) {
+                batches[batches.size()-1][CMIDX(r, batchCounter, 8)] = items[r];
             }
 
             labels[labels.size()-1][batchCounter] = target_class;
@@ -100,7 +110,7 @@ public:
         }
 
         assert(batches.size() == labels.size());
-        
+
         //cout << batches[1] << endl;
         //cout << labels[1] << endl;
         return 0;
@@ -119,7 +129,5 @@ private:
 
     std::vector<Matrix> batches;
     std::vector<Matrix> labels;
-
-    static const int FEATURES = 8;
 };
 #endif //NEURALNETWORKCUDA_PULSARPARSER_H
