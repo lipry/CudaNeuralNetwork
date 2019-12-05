@@ -35,8 +35,6 @@ Matrix& ReluLayer::backward(cublasHandle_t handle, Matrix &top_diff, float learn
     // gpu_relu_backward(float *Z, float* top_diff, float *Res, int x, int y)
     gpu_relu_backward(Z.getDevData().get(), top_diff.getDevData().get(), dZ.getDevData().get(), dZ.getX(), dZ.getY());
 
-
-
     // TODO: togliere stampa
     dZ.cpyDevToHost();
     cout << "dZ relu"<< endl;

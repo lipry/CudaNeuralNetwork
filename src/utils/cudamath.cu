@@ -184,16 +184,12 @@ void gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, const
     const float *alpha = &alf;
     const float *beta = &bet;
 
-    printf("alf: %f, bet: %f\n", alf, bet);
-
     //building a dummy 1s vector x
     Matrix x = Matrix(n, 1);
     x.allocate();
     for (int i = 0; i<n; i++)
         x[i] = 1.0f;
     x.cpyHostToDev();
-
-    cout << x << endl;
 
     // Y = W * x
     cublasSgemv(handle, CUBLAS_OP_N, m, n, alpha, W, lda, x.getDevData().get(), 1, beta, Y, 1);

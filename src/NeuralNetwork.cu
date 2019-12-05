@@ -41,9 +41,18 @@ Matrix NeuralNetwork::forward(cublasHandle_t handle, Matrix X) {
 void NeuralNetwork::backprop(cublasHandle_t handle, Matrix predictions, Matrix labels) {
     dY.allocate_size(predictions.getX(), 1);
 
+    //TODO: rimuovere stampe
+    predictions.cpyDevToHost();
+    cout << "PREDICTIONS" << endl;
+    cout << predictions << endl;
+
     Matrix top_diff = this->cost->getDCost(predictions, labels, dY);
 
     //TODO: rimuovere stampe
+    top_diff.cpyDevToHost();
+    cout << "COST TOP DIFF" << endl;
+    cout << top_diff << endl;
+
 
     for(auto it = nn_layers.rbegin(); it != nn_layers.rend(); it++){
         cout << (*it)->getName() << " BACKWARD" << endl;

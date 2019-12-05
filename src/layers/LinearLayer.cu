@@ -17,7 +17,7 @@ W(x, y), b(x, 1)
     this->name = name;
     W.allocate();
     b.allocate();
-    this->initWeights(false, 0.0f, 1.0f);
+    this->initWeights(true, -0.5f, 0.5f);
     this->initBias();
 
     // TODO: rimuovere stampe
@@ -132,7 +132,7 @@ void LinearLayer::initWeights(bool random, float lower, float higher) {
 }
 
 void LinearLayer::initBias() {
-    this->initZeroes(this->b, 1);
+    this->initZeroes(this->b, 0.0f);
     //this->b[0] = 1;
     //this->b[1] = 2;
     //this->b[2] = 3;

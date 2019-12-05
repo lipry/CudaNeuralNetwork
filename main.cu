@@ -18,12 +18,12 @@ int main() {
     cublasHandle_t handle;
     CHECK_CUBLAS(cublasCreate(&handle));
 
-    std::string data_path = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/pulsar_stars.csv";
+    std::string data_path = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/pulsar_normalized.csv";
     //std::string labels_file = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/t10k-labels-idx1-ubyte";
     PulsarParser pulsar = PulsarParser(10);
     pulsar.Parse(data_path);
 
-    pulsar.Print();
+    //pulsar.Print();
 
     //mnist.Print();
 
@@ -64,29 +64,41 @@ int main() {
     Y_Labels[CMIDX(0, 3, n_entries)] = 1.0;
     Y_Labels[CMIDX(0, 3, n_entries)] = 1.0;
 
-    Y_Labels.cpyHostToDev();
+    Y_Labels.cpyHostToDev();*/
 
 
-    NeuralNetwork nn = NeuralNetwork(1.0f);
-    nn.newLayer(new LinearLayer("linear_layer1", 3, features));
-    nn.newLayer(new ReluLayer("relu1"));
-    nn.newLayer(new LinearLayer("linear_layer2", 10, 3));
+    NeuralNetwork nn = NeuralNetwork(0.001f);
+    nn.newLayer(new LinearLayer("linear_layer1", 20, 8));
+    nn.newLayer(new SigmoidLayer("sigmoid_middle"));
+    nn.newLayer(new LinearLayer("linear_layer2", 1, 20));
     nn.newLayer(new SigmoidLayer("sigmoid_out"));
 
     nn.setCostFunction(new BinaryCrossEntropy());
 
+
+    BinaryCrossEntropy cost;
+
     Matrix Y;
-    for (int e = 0; e < 2; e ++) {
-        cout << "EPOCA" << e << endl;
-        Y = nn.forward(handle, A);
+    for (int epoch = 0; epoch < 10; epoch++) {
+        float c = 0.0;
 
+        std::vector<Matrix> batches = pulsar.getBatches();
+        std::vector<Matrix> labels = pulsar.getLabels();
 
-        Y.cpyDevToHost();
-        cout << "Y: " << endl;
-        cout << Y << endl;
+        for(int batch_idx = 0; batch_idx < batches.size(); batch_idx++) {
+            batches.at(batch_idx).cpyHostToDev();
+            labels.at(batch_idx).cpyHostToDev();
+            Y = nn.forward(handle, batches.at(batch_idx));
 
-        nn.backprop(handle, Y, Y_Labels);
-    }*/
+            nn.backprop(handle, Y, labels.at(batch_idx));
+            c+=cost.getCost(Y, labels.at(batch_idx));
+
+        }
+
+        std::cout << "Epoch: " << epoch
+             << ", Cost: " << c / batches.size()
+             << std::endl;
+    }
 
 
     // Y(m,n) = W(m,k) * A(k,n)
