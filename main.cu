@@ -69,6 +69,7 @@ int main() {
 
             nn.backprop(handle, Y, labels.at(batch_idx));
             c += cost.getCost(Y, labels.at(batch_idx));
+            //break;
         }
 
         if(epoch%100==0) {

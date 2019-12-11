@@ -4,6 +4,7 @@
 ## Ignore MNIST dataset files ##
 
 data/*
+logs/*
 
 ### C++ ###
 # Prerequisites
