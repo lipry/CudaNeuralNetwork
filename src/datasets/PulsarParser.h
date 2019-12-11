@@ -51,7 +51,7 @@ public:
 
     int Parse(std::string csvPath)
     {
-        io::CSVReader<8+1> in(csvPath);
+        io::CSVReader<9> in(csvPath);
         in.read_header(io::ignore_no_column,
                 "Mean of the integrated profile",
                 "Standard deviation of the integrated profile",
@@ -101,11 +101,13 @@ public:
         return 0;
     }
 
-    const vector<Matrix> &getBatches() const {
+    const vector<Matrix> getBatches() const {
+        /*std::vector <Matrix> tmp (batches.size());
+        return std::copy(batches, batches + batches.size(), tmp.begin());*/
         return batches;
     }
 
-    const vector<Matrix> &getLabels() const {
+    const vector<Matrix> getLabels() const {
         return labels;
     }
 

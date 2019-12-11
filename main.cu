@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstring>
+#include <fstream>
 #include "src/utils/Matrix.h"
 #include "cublas_v2.h"
 #include "src/utils/common.h"
@@ -11,164 +12,115 @@
 #include "src/datasets/MNISTParser.h"
 #include "src/utils/csv.h"
 #include "src/datasets/PulsarParser.h"
+#include <chrono>
 
 using namespace std;
 
+float accuracy(const Matrix& predictions, const Matrix& targets);
+
 int main() {
+    int batch_size = 1000;
+    int n_epochs = 1000;
+
+    std::string logs_dir_path = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/logs/";
+
+
     cublasHandle_t handle;
     CHECK_CUBLAS(cublasCreate(&handle));
 
-    std::string data_path = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/pulsar_normalized.csv";
-    //std::string labels_file = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/t10k-labels-idx1-ubyte";
-    PulsarParser pulsar = PulsarParser(10);
-    pulsar.Parse(data_path);
+    std::ofstream log_csv;
+    log_csv.open(logs_dir_path + "logs_" + std::to_string(batch_size) + "_"+ std::to_string(n_epochs) + ".log", std::ios::app);
 
-    //pulsar.Print();
-
-    //mnist.Print();
-
-    /*for(int i = 0; i < 3; i++) {
-        Matrix x = mnist.getNextBatch();
-        cout << x << "\n" << endl;
-    }*/
-
-    /*int features = 2;
-    int n_entries = 4;
-    Matrix A = Matrix(features, n_entries);
-    A.allocate();
-    //int count = 1;
-    for(int r = 0; r<features; r++){
-        for(int c=0; c<n_entries;c++){
-            A[CMIDX(r, c, features)] = 0;
-            //count++;
-        }
-    }
-    A[CMIDX(1, 0, features)] = 1;
-    A[CMIDX(0, 3, features)] = 1;
-
-    A.cpyHostToDev();
-
-    cout << "A: " << endl;
-    cout << A << endl;
-
-    Matrix Y_Labels = Matrix(n_entries, 10);
-    Y_Labels.allocate();
-    for(int i = 0; i < n_entries; i++){
-        for(int c = 0; c<10; c++) {
-            Y_Labels[CMIDX(i, c, n_entries)] = 0;
-        }
-    }
-
-    Y_Labels[CMIDX(0, 3, n_entries)] = 1.0;
-    Y_Labels[CMIDX(0, 3, n_entries)] = 1.0;
-    Y_Labels[CMIDX(0, 3, n_entries)] = 1.0;
-    Y_Labels[CMIDX(0, 3, n_entries)] = 1.0;
-
-    Y_Labels.cpyHostToDev();*/
-
-
-    NeuralNetwork nn = NeuralNetwork(0.001f);
-    nn.newLayer(new LinearLayer("linear_layer1", 20, 8));
-    nn.newLayer(new SigmoidLayer("sigmoid_middle"));
-    nn.newLayer(new LinearLayer("linear_layer2", 1, 20));
+    NeuralNetwork nn = NeuralNetwork(0.01f);
+    nn.newLayer(new LinearLayer("linear_layer1", 100, 8));
+    nn.newLayer(new ReluLayer("relu"));
+    nn.newLayer(new LinearLayer("linear_layer2", 1, 100));
     nn.newLayer(new SigmoidLayer("sigmoid_out"));
 
     nn.setCostFunction(new BinaryCrossEntropy());
 
-
     BinaryCrossEntropy cost;
 
+    cout << "BATCH SIZE: " << batch_size << " BLOCK_SIZE: " << BLOCK_SIZE << endl;
+
+    std::string train_path = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/pulsar_normalized_train.csv";
+    PulsarParser pulsar = PulsarParser(batch_size);
+
+    pulsar.Parse(train_path);
+
+    std::vector<Matrix> batches = pulsar.getBatches();
+    std::vector<Matrix> labels = pulsar.getLabels();
+
     Matrix Y;
-    for (int epoch = 0; epoch < 10; epoch++) {
-        float c = 0.0;
 
-        std::vector<Matrix> batches = pulsar.getBatches();
-        std::vector<Matrix> labels = pulsar.getLabels();
+    float c;
 
-        for(int batch_idx = 0; batch_idx < batches.size(); batch_idx++) {
-            batches.at(batch_idx).cpyHostToDev();
-            labels.at(batch_idx).cpyHostToDev();
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    for (int epoch = 0; epoch < n_epochs; epoch++) {
+        c = 0.0;
+
+        for (int batch_idx = 0; batch_idx < batches.size() - 1; batch_idx++) {
+            if(epoch == 0) {
+                batches.at(batch_idx).cpyHostToDev();
+                labels.at(batch_idx).cpyHostToDev();
+            }
+
             Y = nn.forward(handle, batches.at(batch_idx));
 
             nn.backprop(handle, Y, labels.at(batch_idx));
-            c+=cost.getCost(Y, labels.at(batch_idx));
-
+            c += cost.getCost(Y, labels.at(batch_idx));
         }
 
-        std::cout << "Epoch: " << epoch
-             << ", Cost: " << c / batches.size()
-             << std::endl;
-    }
-
-
-    // Y(m,n) = W(m,k) * A(k,n)
-    /*
-    cout << "A:" << endl;
-    cout << A << endl;
-    Matrix top_diff = Matrix(n_entries, features);
-    top_diff.allocate();
-    count = 0;
-    for(int r = 0; r<n_entries; r++){
-        for(int c=0; c<features; c++){
-            top_diff[CMIDX(r, c, n_entries)] = count;
-            count++;
+        if(epoch%100==0) {
+            std::cout << "Epoch: " << epoch
+                      << ", Cost: " << c / batches.size()
+                      << ", Time: " <<  std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - begin).count()
+                      << std::endl;
         }
     }
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-    top_diff.cpyHostToDev();
-    cout << "top_diff:" << endl;
-    cout << top_diff << endl;
+    int time = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
 
-    SigmoidLayer *l = new SigmoidLayer("Sigmoid");
-    //Layer *l = new LinearLayer("prova", 3, features); // W
+    std::string test_path = "/home/studenti/fabio.lipreri/Documents/NeuralNetworkCUDA/data/pulsar_normalized_test.csv";
+    PulsarParser pulsar_test = PulsarParser(batch_size);
 
-    Matrix Y = l->forward(handle, A);
+    pulsar_test.Parse(train_path);
 
-    Y.cpyDevToHost();
-    cout << "Y: " << endl;
-    cout<< Y << endl;
+    std::vector<Matrix> batches_test = pulsar_test.getBatches();
+    std::vector<Matrix> labels_test = pulsar_test.getLabels();
 
-    Matrix b = l->backward(handle, top_diff, 1.0f);
-
-    b.cpyDevToHost();
-    cout << "sigmoid backward with mul" << endl;
-    cout << b << endl;*/
-
-    /*Matrix y = Matrix(5, 1);
-    y.allocate();
-
-    for(int i = 0; i  < y.getX(); i++){
-        y[i] = 0.5;
+    float acc = 0.0;
+    for (int batch_idx = 0; batch_idx < batches_test.size(); batch_idx++) {
+        Y = nn.forward(handle, batches_test.at(batch_idx));
+        Y.cpyDevToHost();
+        acc += accuracy(Y, labels.at(batch_idx));
     }
-
-    y[2] = 0.5;
-    y[4] = 0.2;
+    acc = acc / batches_test.size();
 
 
-    Matrix labels = Matrix(5, 1);
-    labels.allocate();
+    log_csv<< std::to_string(batch_size)+","+std::to_string(BLOCK_SIZE)+","+std::to_string(time)+","+std::to_string(acc)+","+std::to_string(c)+"\n";
+    std::cout<< std::to_string(batch_size)+","+std::to_string(BLOCK_SIZE)+","+std::to_string(time)+","+std::to_string(acc)+","+std::to_string(c)+"\n"<<endl;
 
-    for(int i = 0; i  < labels.getX(); i++){
-        labels[i] = 0.5;
-    }
-
-    labels[2] = 0.1;
-    labels[4] = 0.8;
-
-    y.cpyHostToDev();
-    labels.cpyHostToDev();
-
-    Matrix dY = Matrix(5, 1);
-    dY.allocate();
-
-    BinaryCrossEntropy bce = BinaryCrossEntropy();
-    float cost = bce.getCost(y, labels);
-
-    //dY.cpyDevToHost();
-    cout << "cost: " << cost << endl;*/
-
+    log_csv.close();
     cudaDeviceReset();
+
     return 0;
 }
+
+float accuracy(const Matrix& predictions, const Matrix& targets) {
+    int m = predictions.getY();
+    int correct_predictions = 0;
+
+    for (int i = 0; i < m; i++) {
+        float prediction = predictions[i] >= 0.5 ? 1 : 0;
+        if (prediction == targets[i]) {
+            correct_predictions++;
+        }
+    }
+
+    return static_cast<float>(correct_predictions) / m;
+}
+
 
 

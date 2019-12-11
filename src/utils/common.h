@@ -5,7 +5,7 @@
 #ifndef NEURALNETWORKCUDA_COMMON_H
 #define NEURALNETWORKCUDA_COMMON_H
 
-#define BLOCK_SIZE 2
+#define BLOCK_SIZE 1024
 
 #define CMIDX(r, c, n_righe) (c * n_righe + r)
 

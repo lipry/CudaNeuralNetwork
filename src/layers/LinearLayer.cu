@@ -40,14 +40,14 @@ Matrix &LinearLayer::forward(cublasHandle_t handle, Matrix &A) {
     Y.allocate_size(W.getX(), A.getY());
 
     // TODO: rimuovi stampa
-    W.cpyDevToHost();
+    /*W.cpyDevToHost();
     cout << "W " << endl;
-    cout << W << endl;
+    cout << W << endl;*/
 
     // TODO: rimuovi stampa
-    b.cpyDevToHost();
+    /*b.cpyDevToHost();
     cout << "b" << endl;
-    cout << b << endl;
+    cout << b << endl;*/
     // Y(m,n) = W(m,k) * A(k,n)
     //m, n, k
     gpu_blas_mmul(handle, this->W.getDevData().get(), CUBLAS_OP_N, this->A.getDevData().get(),
@@ -56,9 +56,9 @@ Matrix &LinearLayer::forward(cublasHandle_t handle, Matrix &A) {
     gpu_add_bias(this->Y.getDevData().get(), this->b.getDevData().get(),
             this->Y.getDevData().get(), this->Y.getX(), this->Y.getY());
 
-    Y.cpyDevToHost();
+    /*Y.cpyDevToHost();
     cout << "Y: " << endl;
-    cout << Y << endl;
+    cout << Y << endl;*/
 
 
     return Y;
@@ -67,35 +67,35 @@ Matrix &LinearLayer::forward(cublasHandle_t handle, Matrix &A) {
 Matrix &LinearLayer::backward(cublasHandle_t handle, Matrix &top_diff, float learning_rate) {
     dA.allocate_size(A.getX(), A.getY());
 
-    top_diff.cpyDevToHost();
+    /*top_diff.cpyDevToHost();
     cout << "top_diff: " << endl;
-    cout << top_diff << endl;
+    cout << top_diff << endl;*/
     //Calculate dA
     //m, n, k
     gpu_blas_mmul(handle, this->W.getDevData().get(), CUBLAS_OP_T, top_diff.getDevData().get(), CUBLAS_OP_N,
                   this->dA.getDevData().get(), this->W.getY(), top_diff.getY(), this->W.getX());
 
     // TODO: rimuovi stampa
-    dA.cpyDevToHost();
+    /*dA.cpyDevToHost();
     cout << "dA" << endl;
-    cout << dA << endl;
+    cout << dA << endl;*/
 
-    cout << "batch size: " << this->A.getY() << endl;
+    /*cout << "batch size: " << this->A.getY() << endl;*/
     // Update Weights
     gpu_blas_mmul(handle, top_diff.getDevData().get(), CUBLAS_OP_N, this->A.getDevData().get(), CUBLAS_OP_T,
                    W.getDevData().get(), top_diff.getX(), this->A.getX(), top_diff.getY(), learning_rate, 4, 1.0f);
 
 
     // TODO: rimuovi stampa
-    W.cpyDevToHost();
+    /*W.cpyDevToHost();
     cout << "dW " << endl;
-    cout << W << endl;
+    cout << W << endl;*/
 
     //Update bias
 
-    b.cpyDevToHost();
+    /*b.cpyDevToHost();
     cout << "b pre calcolo: " << endl;
-    cout << b << endl;
+    cout << b << endl;*/
 
     //gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, const int m, const int n, float learning_rate,
     //        const float batchSize, const float bet)
@@ -103,9 +103,9 @@ Matrix &LinearLayer::backward(cublasHandle_t handle, Matrix &top_diff, float lea
             top_diff.getY(), learning_rate, this->A.getY(), 1.0f);
 
     // TODO: rimuovi stampa
-    b.cpyDevToHost();
+    /*b.cpyDevToHost();
     cout << "b" << endl;
-    cout << b << endl;
+    cout << b << endl;*/
 
     return dA;
 }

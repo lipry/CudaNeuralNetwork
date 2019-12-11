@@ -20,9 +20,9 @@ Matrix &SigmoidLayer::forward(cublasHandle_t handle, Matrix &A) {
     gpu_sigmoid_forward(this->Z.getDevData().get(), this->Res.getDevData().get(), this->Res.getX(), this->Res.getY());
 
     // TODO: togliere stampa
-    Res.cpyDevToHost();
+    /*Res.cpyDevToHost();
     cout << "Y signmoid"<< endl;
-    cout << Res << endl;
+    cout << Res << endl;*/
     return Res;
 }
 
@@ -30,9 +30,9 @@ Matrix &SigmoidLayer::backward(cublasHandle_t handle, Matrix &top_diff, float le
     Matrix sigmoid_res;
     sigmoid_res.allocate_size(this->Res.getX(), this->Res.getY());
 
-    top_diff.cpyDevToHost();
+    /*top_diff.cpyDevToHost();
     cout << "top_diff" << endl;
-    cout << top_diff << endl;
+    cout << top_diff << endl;*/
 
     gpu_sigmoid_backward(this->Res.getDevData().get(), sigmoid_res.getDevData().get(), sigmoid_res.getX(), sigmoid_res.getY());
 

@@ -66,9 +66,9 @@ __global__ void sigmoidBackward(float* R, float* V, int x, int y){
 __global__ void binaryCrossEntropyCost(float* cost, float* predictions, float* target, int size) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index < size) {
-        float partial_cost = target[index] * logf(predictions[index])
-                             + (1.0f - target[index]) * logf(1.0f - predictions[index]);
-        atomicAdd(cost, -partial_cost / size);
+        float partial_cost = target[index] * logf(1.0e-15+predictions[index])
+                             + (1.0f - target[index]) * logf(1.0e-15+(1.0f - predictions[index]));
+        atomicAdd(cost, -1.0 * partial_cost / size);
     }
 }
 
@@ -77,7 +77,7 @@ __global__ void dBinaryCrossEntropyCost(float* predictions, float* target, float
     int index = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (index < x) {
-        dY[index] = -1.0 * ( target[index]/predictions[index] - (1 - target[index])/(1 - predictions[index]) );
+        dY[index] = -1.0 * ( target[index]/predictions[index] - ((1 - target[index])/(1 - predictions[index])) );
     }
 }
 
@@ -137,14 +137,15 @@ void gpu_bce_cost(float *cost, float *prediction, float *labels, int x){
     dim3 TxB(BLOCK_SIZE);
     dim3 num_blocks((x + TxB.x - 1) / TxB.x);
     binaryCrossEntropyCost<<<num_blocks, TxB>>>(cost, prediction, labels, x);
-
-    cudaDeviceSynchronize(); // todo: serve?!
+    cudaDeviceSynchronize();
 }
 
 void gpu_derivative_bce_cost(float *dY, float* predictions, float* target, int x){
     dim3 TxB(BLOCK_SIZE);
     dim3 num_blocks((x + TxB.x - 1) / TxB.x);
     dBinaryCrossEntropyCost<<<num_blocks, TxB>>>(predictions, target, dY, x);
+
+    cudaDeviceSynchronize();
 }
 
 // ========================
@@ -157,7 +158,7 @@ void gpu_blas_mmul(cublasHandle_t &handle, const float *W, cublasOperation_t W_o
         const float *A, cublasOperation_t A_op, float *Y,
         const int m, const int n, const int k, float learning_rate, const float batch_size, const float bet) {
     int lda = 0,ldb = 0,ldc = m;
-    const float alf = (1.0f / batch_size) * learning_rate;
+    const float alf = -1.0f * (1.0f / batch_size) * learning_rate;
     const float *alpha = &alf;
     const float *beta = &bet;
     if(W_op == CUBLAS_OP_N && A_op == CUBLAS_OP_N) {
@@ -180,7 +181,7 @@ void gpu_blas_mmul(cublasHandle_t &handle, const float *W, cublasOperation_t W_o
 void gpu_blas_sum_column(cublasHandle_t &handle, const float *W, float *Y, const int m, const int n, float learning_rate,
         const float batch_size, const float bet){
     int lda = m;
-    const float alf = (1.0f / batch_size) * learning_rate;
+    const float alf = -1.0f * (1.0f / batch_size) * learning_rate;
     const float *alpha = &alf;
     const float *beta = &bet;
 
